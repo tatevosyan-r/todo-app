@@ -1,4 +1,3 @@
-
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import GlobalStyles from '@mui/material/GlobalStyles';
@@ -7,7 +6,11 @@ import {
     AppBar,
     Toolbar,
     Typography,
-    Paper
+    Paper,
+    CircularProgress,
+    Alert,
+    Snackbar,
+    Box
 } from '@mui/material';
 
 import { TodoList } from './components/TodoList/TodoList';
@@ -15,6 +18,7 @@ import { AddTodo } from './components/AddTodo/AddTodo';
 import { EditTodo } from './components/EditTodo/EditTodo';
 import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
 import { TodoFilters } from './components/TodoFilters/TodoFilters';
+import { TodoPagination } from './components/TodoPagination/TodoPagination';
 import { useTheme } from './hooks/useTheme';
 import { useTodos } from './hooks/useTodos';
 import { useFilters } from './hooks/useFilters';
@@ -22,11 +26,30 @@ import { useEditDialog } from './hooks/useEditDialog';
 
 function App() {
     const { mode, toggleMode } = useTheme();
-    const { sortOrder, filterStatus, setSortOrder, setFilterStatus } = useFilters();
-    const { todos, addTodo, toggleTodo, deleteTodo, editTodo, getFilteredTodos, getCounts } = useTodos();
+    const { sortOrder, setSortOrder } = useFilters(); // Убрали filterStatus
+    const {
+        todos,
+        loading,
+        error,
+        currentPage,
+        itemsPerPage,
+        totalPages,
+        filter,
+        addTodo,
+        toggleTodo,
+        deleteTodo,
+        editTodo,
+        changePage,
+        changeItemsPerPage,
+        changeFilter,
+        clearErrorMsg,
+        getSortedTodos,  // Используем новую функцию
+        getCounts
+    } = useTodos();
     const { editDialogOpen, editingTodo, openEditDialog, closeEditDialog } = useEditDialog();
 
-    const filteredTodos = getFilteredTodos(todos, filterStatus, sortOrder);
+    // Получаем отсортированные задачи (фильтрация уже на сервере)
+    const sortedTodos = getSortedTodos(todos, sortOrder);
     const counts = getCounts(todos);
 
     const theme = createTheme({
@@ -83,20 +106,40 @@ function App() {
                     <AddTodo onAdd={addTodo} />
 
                     <TodoFilters
-                        filterStatus={filterStatus}
+                        filterStatus={filter}  // Используем filter из Redux
                         sortOrder={sortOrder}
                         counts={counts}
-                        onFilterChange={setFilterStatus}
+                        onFilterChange={changeFilter}  // Меняем фильтр в Redux
                         onSortChange={setSortOrder}
                     />
 
-                    <TodoList
-                        todos={filteredTodos}
-                        mode={mode}
-                        onToggle={toggleTodo}
-                        onDelete={deleteTodo}
-                        onEdit={openEditDialog}
-                    />
+                    {loading && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                            <CircularProgress />
+                        </Box>
+                    )}
+
+                    {!loading && (
+                        <>
+                            <TodoList
+                                todos={sortedTodos}  // Используем отсортированные задачи
+                                mode={mode}
+                                onToggle={toggleTodo}
+                                onDelete={deleteTodo}
+                                onEdit={openEditDialog}
+                            />
+
+                            {totalPages > 0 && (
+                                <TodoPagination
+                                    currentPage={currentPage}
+                                    totalPages={totalPages}
+                                    itemsPerPage={itemsPerPage}
+                                    onPageChange={changePage}
+                                    onItemsPerPageChange={changeItemsPerPage}
+                                />
+                            )}
+                        </>
+                    )}
                 </Paper>
             </Container>
 
@@ -106,6 +149,17 @@ function App() {
                 onClose={closeEditDialog}
                 onSave={editTodo}
             />
+
+            <Snackbar
+                open={!!error}
+                autoHideDuration={6000}
+                onClose={clearErrorMsg}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={clearErrorMsg} severity="error" sx={{ width: '100%' }}>
+                    {error}
+                </Alert>
+            </Snackbar>
         </ThemeProvider>
     );
 }

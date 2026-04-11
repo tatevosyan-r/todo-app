@@ -1,71 +1,106 @@
-
-import { useState, useEffect } from 'react';
-import { storage } from '../utils/localStorage';
-import type { Todo, FilterStatus, SortOrder } from '../types/todo';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
+import {
+    fetchTodosAsync,
+    createTodoAsync,
+    toggleTodoAsync,
+    deleteTodoAsync,
+    updateTodoAsync,
+    setCurrentPage,
+    setItemsPerPage,
+    setFilter,
+    clearError
+} from '../store/todoSlice';
+import { useEffect } from 'react';
+import type { FilterStatus, SortOrder, Todo } from '../types/todo';
 
 export const useTodos = () => {
-    const [todos, setTodos] = useState<Todo[]>(storage.getTodos);
+    const dispatch = useAppDispatch();
+    const {
+        todos,
+        loading,
+        error,
+        currentPage,
+        itemsPerPage,
+        filter,
+        total,
+        totalPages
+    } = useAppSelector(state => state.todos);
 
     useEffect(() => {
-        storage.saveTodos(todos);
-    }, [todos]);
+        dispatch(fetchTodosAsync({
+            page: currentPage,
+            limit: itemsPerPage,
+            filter
+        }));
+    }, [dispatch, currentPage, itemsPerPage, filter]);
 
     const addTodo = (text: string) => {
-        setTodos([
-            ...todos,
-            {
-                id: Date.now(),
-                text,
-                completed: false,
-                createdAt: new Date().toISOString(),
-            }
-        ]);
+        dispatch(createTodoAsync(text));
     };
 
     const toggleTodo = (id: number) => {
-        setTodos(todos.map(todo =>
-            todo.id === id ? { ...todo, completed: !todo.completed } : todo
-        ));
+        dispatch(toggleTodoAsync(id));
     };
 
     const deleteTodo = (id: number) => {
-        setTodos(todos.filter(todo => todo.id !== id));
+        dispatch(deleteTodoAsync(id));
     };
 
     const editTodo = (id: number, newText: string) => {
-        setTodos(todos.map(todo =>
-            todo.id === id ? { ...todo, text: newText } : todo
-        ));
+        const todo = todos.find(t => t.id === id);
+        if (todo) {
+            dispatch(updateTodoAsync({ id, text: newText, completed: todo.completed }));
+        }
     };
 
-    const getFilteredTodos = (todos: Todo[], filterStatus: FilterStatus, sortOrder: SortOrder) => {
-        let filtered = todos;
-        if (filterStatus === 'completed') {
-            filtered = todos.filter(todo => todo.completed);
-        } else if (filterStatus === 'active') {
-            filtered = todos.filter(todo => !todo.completed);
-        }
+    const changePage = (page: number) => {
+        dispatch(setCurrentPage(page));
+    };
 
-        return [...filtered].sort((a, b) => {
+    const changeItemsPerPage = (limit: number) => {
+        dispatch(setItemsPerPage(limit));
+    };
+
+    const changeFilter = (newFilter: FilterStatus) => {
+        dispatch(setFilter(newFilter));
+    };
+
+    const clearErrorMsg = () => {
+        dispatch(clearError());
+    };
+
+    const getSortedTodos = (todosList: Todo[], sortOrder: SortOrder): Todo[] => {
+        return [...todosList].sort((a, b) => {
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
             return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
         });
     };
 
-    const getCounts = (todos: Todo[]) => ({
-        all: todos.length,
-        active: todos.filter(t => !t.completed).length,
-        completed: todos.filter(t => t.completed).length
+    const getCounts = (todosList: Todo[]) => ({
+        all: total,
+        active: todosList.filter(t => !t.completed).length,
+        completed: todosList.filter(t => t.completed).length
     });
 
     return {
         todos,
+        loading,
+        error,
+        currentPage,
+        itemsPerPage,
+        filter,
+        total,
+        totalPages,
         addTodo,
         toggleTodo,
         deleteTodo,
         editTodo,
-        getFilteredTodos,
+        changePage,
+        changeItemsPerPage,
+        changeFilter,
+        clearErrorMsg,
+        getSortedTodos,
         getCounts
     };
 };

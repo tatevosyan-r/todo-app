@@ -5,12 +5,5 @@ export interface Todo {
     createdAt: string;
 }
 
+export type FilterStatus = 'all' | 'active' | 'completed';
 export type SortOrder = 'newest' | 'oldest';
-
-export type FilterStatus = 'all' | 'completed' | 'active';
-
-export interface TodoCounts {
-    all: number;
-    active: number;
-    completed: number;
-}
