@@ -1,6 +1,5 @@
 import axios from 'axios';
-
-const API_URL = 'http://localhost:3001';
+import type { Todo, FilterStatus } from '../types/todo';
 
 export interface TodoResponse {
     data: Todo[];
@@ -10,36 +9,32 @@ export interface TodoResponse {
     totalPages: number;
 }
 
-export interface Todo {
-    id: number;
-    text: string;
-    completed: boolean;
-    createdAt: string;
-}
+
+const API_URL = 'https://todo-app-xlee.onrender.com';
 
 export const fetchTodos = async (
     page: number,
     limit: number,
-    filter: "active" | "completed" | "all"
+    filter: FilterStatus
 ): Promise<TodoResponse> => {
-    const response = await axios.get(`${API_URL}/todos`, {
+    const response = await axios.get<TodoResponse>(`${API_URL}/todos`, {
         params: { page, limit, filter }
     });
     return response.data;
 };
 
 export const createTodo = async (text: string): Promise<Todo> => {
-    const response = await axios.post(`${API_URL}/todos`, { text });
+    const response = await axios.post<Todo>(`${API_URL}/todos`, { text });
     return response.data;
 };
 
 export const updateTodo = async (id: number, text: string, completed: boolean): Promise<Todo> => {
-    const response = await axios.put(`${API_URL}/todos/${id}`, { text, completed });
+    const response = await axios.put<Todo>(`${API_URL}/todos/${id}`, { text, completed });
     return response.data;
 };
 
 export const toggleTodoStatus = async (id: number): Promise<Todo> => {
-    const response = await axios.patch(`${API_URL}/todos/${id}/toggle`);
+    const response = await axios.patch<Todo>(`${API_URL}/todos/${id}/toggle`);
     return response.data;
 };
 

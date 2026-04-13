@@ -9,20 +9,6 @@ app.use(express.json());
 let todos = [];
 let nextId = 1;
 
-// Корневой маршрут для проверки
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Todo API is running on Render!',
-    endpoints: {
-      getAll: '/api/todos?page=1&limit=10&filter=all',
-      create: 'POST /api/todos',
-      update: 'PUT /api/todos/:id',
-      toggle: 'PATCH /api/todos/:id/toggle',
-      delete: 'DELETE /api/todos/:id'
-    }
-  });
-});
-
 // API маршруты
 app.get('/api/todos', (req, res) => {
   const { page = 1, limit = 10, filter = 'all' } = req.query;
@@ -106,20 +92,13 @@ app.delete('/api/todos/:id', (req, res) => {
   res.status(204).send();
 });
 
-// Обработка 404
-app.use('*', (req, res) => {
+// ✅ Правильный обработчик 404 (без звездочки в кавычках)
+app.use((req, res) => {
   res.status(404).json({ error: 'Endpoint not found' });
 });
 
-
+// Запуск сервера
 const PORT = process.env.PORT || 3001;
-
-// Запускаем сервер ТОЛЬКО если не в среде Vercel/Render
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
-}
-
-// Экспортируем app для серверных платформ
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
