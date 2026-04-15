@@ -26,7 +26,12 @@ export const useTodos = () => {
         totalPages
     } = useAppSelector((state) => state.todos);
 
-    const [allTodos, setAllTodos] = useState<Todo[]>([]);
+    // Состояния для счетчиков
+    const [counts, setCounts] = useState({
+        all: 0,
+        active: 0,
+        completed: 0
+    });
 
     useEffect(() => {
         dispatch(fetchTodosAsync({
@@ -36,36 +41,49 @@ export const useTodos = () => {
         }));
     }, [dispatch, currentPage, itemsPerPage, filter]);
 
-    // Загружаем все задачи для правильного подсчета
+    // Функция для получения актуальных счетчиков с сервера
+    const fetchCounts = async () => {
+        try {
+            // Получаем все задачи без пагинации
+            const response = await fetch('http://193.124.67.242/api/todos?limit=10000');
+            const data = await response.json();
+            const allTasks = data.data;
+
+            setCounts({
+                all: allTasks.length,
+                active: allTasks.filter(t => !t.completed).length,
+                completed: allTasks.filter(t => t.completed).length
+            });
+        } catch (error) {
+            console.error('Ошибка загрузки счетчиков:', error);
+        }
+    };
+
+    // Загружаем счетчики при монтировании и после каждого изменения задач
     useEffect(() => {
-        const fetchAllTodos = async () => {
-            try {
-                const response = await fetch(`http://193.124.67.242/api/todos?limit=1000`);
-                const data = await response.json();
-                setAllTodos(data.data);
-            } catch (error) {
-                console.error('Ошибка загрузки всех задач:', error);
-            }
-        };
-        fetchAllTodos();
-    }, [total]);
+        fetchCounts();
+    }, [total]); // Перезагружаем когда общее количество меняется
 
-    const addTodo = (text: string) => {
-        dispatch(createTodoAsync(text));
+    const addTodo = async (text: string) => {
+        await dispatch(createTodoAsync(text));
+        await fetchCounts(); // Обновляем счетчики после добавления
     };
 
-    const toggleTodo = (id: number) => {
-        dispatch(toggleTodoAsync(id));
+    const toggleTodo = async (id: number) => {
+        await dispatch(toggleTodoAsync(id));
+        await fetchCounts(); // Обновляем счетчики после изменения статуса
     };
 
-    const deleteTodo = (id: number) => {
-        dispatch(deleteTodoAsync(id));
+    const deleteTodo = async (id: number) => {
+        await dispatch(deleteTodoAsync(id));
+        await fetchCounts(); // Обновляем счетчики после удаления
     };
 
-    const editTodo = (id: number, newText: string) => {
+    const editTodo = async (id: number, newText: string) => {
         const todo = todos.find(t => t.id === id);
         if (todo) {
-            dispatch(updateTodoAsync({ id, text: newText, completed: todo.completed }));
+            await dispatch(updateTodoAsync({ id, text: newText, completed: todo.completed }));
+            await fetchCounts(); // Обновляем счетчики после редактирования
         }
     };
 
@@ -93,11 +111,7 @@ export const useTodos = () => {
         });
     };
 
-    const getCounts = () => ({
-        all: total,
-        active: allTodos.filter(t => !t.completed).length,
-        completed: allTodos.filter(t => t.completed).length
-    });
+    const getCounts = () => counts;
 
     return {
         todos,

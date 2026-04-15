@@ -50,7 +50,7 @@ function App() {
 
     // Получаем отсортированные задачи
     const sortedTodos = getSortedTodos(todos, sortOrder);
-    const counts = getCounts(todos);
+    const counts = getCounts();
 
     const theme = createTheme({
         palette: {
