@@ -47,12 +47,12 @@ export const useTodos = () => {
             // Получаем все задачи без пагинации
             const response = await fetch('http://193.124.67.242/api/todos?limit=10000');
             const data = await response.json();
-            const allTasks = data.data;
+            const allTasks: Todo[] = data.data;
 
             setCounts({
                 all: allTasks.length,
-                active: allTasks.filter(t => !t.completed).length,
-                completed: allTasks.filter(t => t.completed).length
+                active: allTasks.filter((t: Todo) => !t.completed).length,
+                completed: allTasks.filter((t: Todo) => t.completed).length
             });
         } catch (error) {
             console.error('Ошибка загрузки счетчиков:', error);
@@ -80,7 +80,7 @@ export const useTodos = () => {
     };
 
     const editTodo = async (id: number, newText: string) => {
-        const todo = todos.find(t => t.id === id);
+        const todo = todos.find((t: Todo) => t.id === id);
         if (todo) {
             await dispatch(updateTodoAsync({ id, text: newText, completed: todo.completed }));
             await fetchCounts(); // Обновляем счетчики после редактирования
@@ -104,7 +104,7 @@ export const useTodos = () => {
     };
 
     const getSortedTodos = (todosList: Todo[], sortOrder: SortOrder): Todo[] => {
-        return [...todosList].sort((a, b) => {
+        return [...todosList].sort((a: Todo, b: Todo) => {
             const dateA = new Date(a.createdAt).getTime();
             const dateB = new Date(b.createdAt).getTime();
             return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
