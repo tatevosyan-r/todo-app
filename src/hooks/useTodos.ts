@@ -24,7 +24,7 @@ export const useTodos = () => {
         filter,
         total,
         totalPages
-    } = useAppSelector(state => state.todos);
+    } = useAppSelector((state) => state.todos);
 
     useEffect(() => {
         dispatch(fetchTodosAsync({
@@ -76,6 +76,7 @@ export const useTodos = () => {
             return sortOrder === 'newest' ? dateB - dateA : dateA - dateB;
         });
     };
+
 
     const getCounts = (todosList: Todo[]) => ({
         all: total,

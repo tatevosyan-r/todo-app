@@ -1,6 +1,9 @@
 import axios from 'axios';
 import type { Todo, FilterStatus } from '../types/todo';
 
+// Экспортируем типы, чтобы они были доступны в других файлах
+export type { Todo, FilterStatus };
+
 export interface TodoResponse {
     data: Todo[];
     total: number;
@@ -9,7 +12,7 @@ export interface TodoResponse {
     totalPages: number;
 }
 
-
+// Базовый URL без конечного /todos
 const API_URL = 'https://todo-app-xlee.onrender.com';
 
 export const fetchTodos = async (

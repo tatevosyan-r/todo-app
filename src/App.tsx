@@ -26,7 +26,7 @@ import { useEditDialog } from './hooks/useEditDialog';
 
 function App() {
     const { mode, toggleMode } = useTheme();
-    const { sortOrder, setSortOrder } = useFilters(); // Убрали filterStatus
+    const { sortOrder, setSortOrder } = useFilters();
     const {
         todos,
         loading,
@@ -43,12 +43,12 @@ function App() {
         changeItemsPerPage,
         changeFilter,
         clearErrorMsg,
-        getSortedTodos,  // Используем новую функцию
+        getSortedTodos,
         getCounts
     } = useTodos();
     const { editDialogOpen, editingTodo, openEditDialog, closeEditDialog } = useEditDialog();
 
-    // Получаем отсортированные задачи (фильтрация уже на сервере)
+    // Получаем отсортированные задачи
     const sortedTodos = getSortedTodos(todos, sortOrder);
     const counts = getCounts(todos);
 
@@ -106,7 +106,7 @@ function App() {
                     <AddTodo onAdd={addTodo} />
 
                     <TodoFilters
-                        filterStatus={filter}  // Используем filter из Redux
+                        filterStatus={filter}
                         sortOrder={sortOrder}
                         counts={counts}
                         onFilterChange={changeFilter}  // Меняем фильтр в Redux
