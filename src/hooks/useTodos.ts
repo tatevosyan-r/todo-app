@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import {
     fetchTodosAsync,
@@ -10,7 +11,6 @@ import {
     setFilter,
     clearError
 } from '../store/todoSlice';
-import { useEffect } from 'react';
 import type { FilterStatus, SortOrder, Todo } from '../types/todo';
 
 export const useTodos = () => {
@@ -26,6 +26,8 @@ export const useTodos = () => {
         totalPages
     } = useAppSelector((state) => state.todos);
 
+    const [allTodos, setAllTodos] = useState<Todo[]>([]);
+
     useEffect(() => {
         dispatch(fetchTodosAsync({
             page: currentPage,
@@ -33,6 +35,20 @@ export const useTodos = () => {
             filter
         }));
     }, [dispatch, currentPage, itemsPerPage, filter]);
+
+    // Загружаем все задачи для правильного подсчета
+    useEffect(() => {
+        const fetchAllTodos = async () => {
+            try {
+                const response = await fetch(`http://193.124.67.242/api/todos?limit=1000`);
+                const data = await response.json();
+                setAllTodos(data.data);
+            } catch (error) {
+                console.error('Ошибка загрузки всех задач:', error);
+            }
+        };
+        fetchAllTodos();
+    }, [total]);
 
     const addTodo = (text: string) => {
         dispatch(createTodoAsync(text));
@@ -77,11 +93,10 @@ export const useTodos = () => {
         });
     };
 
-
-    const getCounts = (todosList: Todo[]) => ({
+    const getCounts = () => ({
         all: total,
-        active: todosList.filter(t => !t.completed).length,
-        completed: todosList.filter(t => t.completed).length
+        active: allTodos.filter(t => !t.completed).length,
+        completed: allTodos.filter(t => t.completed).length
     });
 
     return {
